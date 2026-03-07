@@ -96,3 +96,16 @@ variable "keycloak_hostname" {
   EOT
   default     = ""
 }
+
+variable "min_replicas" {
+  type        = number
+  description = "Minimum number of replicas for the Container App (Must be >= 2 for HA)"
+  default     = 2
+}
+
+variable "max_replicas" {
+  type        = number
+  description = "Maximum number of replicas for the Container App"
+  default     = 5
+}
+

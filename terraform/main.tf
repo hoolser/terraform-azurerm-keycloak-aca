@@ -23,13 +23,12 @@ locals {
     "-Djgroups.jdbc.connection_username=${var.postgres_admin_user}",
     "-Djgroups.jdbc.connection_password=${var.postgres_admin_password}",
     "-Djgroups.jdbc.driver_name=postgresql",
-    # Bind to the container's private IP for intra-cluster TCP communication
-    #"-Djgroups.bind.address=SITE_LOCAL",
-    # Use GLOBAL so JGroups binds to the VNet-routable IP (10.0.2.x), not
-    # the 169.254.x.x link-local ACA sidecar address that SITE_LOCAL resolves to.
-    "-Djgroups.bind.address=GLOBAL",
-    # Disable multicast (not available in ACA/Azure)
-    "-Djgroups.use.mcast_addr=false",
+
+    # Networking fixes
+    "-Djgroups.bind.address=GLOBAL",     # Bind to VNet IP (e.g. 10.0.2.x)
+    "-Djgroups.bind.port=7800",          # Force fixed port 7800
+    "-Djava.net.preferIPv4Stack=true",   # Prevent issues with Azure IPv6
+    "-Djgroups.use.mcast_addr=false"     # Disable multicast
   ])
 }
 
@@ -382,9 +381,9 @@ resource "azurerm_container_app" "keycloak" {
       }
     }
 
-    # Minimum 2 replicas to form an actual HA cluster
-    min_replicas = 2
-    max_replicas = 5
+    # Minimum replicas to form an actual HA cluster
+    min_replicas = var.min_replicas
+    max_replicas = var.max_replicas
   }
 
   ingress {

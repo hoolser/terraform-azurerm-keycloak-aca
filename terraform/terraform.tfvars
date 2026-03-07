@@ -7,7 +7,7 @@ container_app_environment_name = "keycloak-env"
 
 # PostgreSQL Configuration
 # postgres_server_name must be globally unique across Azure
-postgres_server_name    = "keycloak-pg-srv-unique97"   # TODO: Change to something globally unique!
+postgres_server_name    = "keycloak-pg-srv-unique777"   # TODO: Change to something globally unique!
 postgres_sku            = "B_Standard_B2s"
 postgres_version        = "16"
 postgres_db_name        = "keycloak"
@@ -26,4 +26,11 @@ keycloak_admin_password = "KeycloakAdminP@ss123!"     # TODO: Change to a secure
 #   Phase 2 — paste the FQDN here and run: terraform apply again
 keycloak_hostname = ""
 #e.g.
-#keycloak_hostname = "keycloak.jollywater-7f7e19ee.northeurope.azurecontainerapps.io"
+#keycloak_hostname = "keycloak.bravesmoke-9c715f69.northeurope.azurecontainerapps.io"
+
+# Scaling Configuration
+min_replicas = 1
+max_replicas = 1
+#After initial deployment, you can enable autoscaling by setting min_replicas to 1 and max_replicas to a higher number, then running terraform apply again.
+#min_replicas = 2
+#max_replicas = 5

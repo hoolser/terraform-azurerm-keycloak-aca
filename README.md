@@ -137,6 +137,11 @@ Edit the file and set:
 
 ### 3. Phase 1 — Initial Deploy (without fixed hostname)
 
+Run the initial apply to create the networking, database, and container environment.
+
+*Tip: In `terraform.tfvars`, ensure `min_replicas = 1` and `max_replicas = 1` for this phase. This creates the resources without starting the application, preventing "zombie" discovery entries before the network is fully stabilized.*
+
+
 ```powershell
 cd terraform
 terraform init
@@ -158,6 +163,8 @@ Copy the FQDN (e.g. `keycloak.redpebble-abc123.northeurope.azurecontainerapps.io
 
 Open `terraform.tfvars` and set `keycloak_hostname` to the FQDN from above, then re-apply:
 
+Enable HA: Set `min_replicas` = `2` and `max_replicas` = `5`.
+Then apply the changes:
 ```powershell
 terraform apply
 ```
