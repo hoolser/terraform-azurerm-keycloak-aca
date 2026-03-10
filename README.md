@@ -167,6 +167,7 @@ Enable HA: Set `min_replicas` = `2` and `max_replicas` = `5`.
 Then apply the changes:
 ```powershell
 terraform apply
+( or terraform apply -auto-approve )
 ```
 
 This enables `KC_HOSTNAME_STRICT=true` so Keycloak enforces the correct issuer URL in tokens.
@@ -276,6 +277,12 @@ az containerapp update `
 - [JGroups JDBC_PING (Forum thread)](https://forum.keycloak.org/t/keycloak-19-0-3-quarkus-ha-in-azure-jgroup-configuration-azure-ping/18200/8)
 - [Azure Container Apps — Scaling & Replicas](https://learn.microsoft.com/en-us/azure/container-apps/scale-app)
 - [Azure PostgreSQL Flexible Server](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/overview)
+
+---
+
+## HA Validation & Testing
+
+Detailed testing for the High Availability of Keycloak while deployed on Azure Container Apps has been performed. Extensive tests validate clustering, replica failover, and session replication across all nodes. The complete step-by-step validation procedure — including pass/fail criteria for each test — is documented in the [**`testing-ha.md`**](../testing-ha.md) file.
 
 ---
 
