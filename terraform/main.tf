@@ -88,32 +88,21 @@ resource "azurerm_subnet" "container_apps" {
   }
 }
 
-# NSG — allow PostgreSQL port only from Container Apps subnet; deny everything else
+# NSG — PoC: allow PostgreSQL port from anywhere (public access for pgAdmin / psql)
+# In production, restrict source_address_prefix to your IP or VNet CIDR only.
 resource "azurerm_network_security_group" "postgres" {
   name                = "postgres-nsg"
   location            = azurerm_resource_group.keycloak.location
   resource_group_name = azurerm_resource_group.keycloak.name
 
   security_rule {
-    name                       = "AllowFromContainerApps"
+    name                       = "AllowPostgresPublicPoC"
     priority                   = 100
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "5432"
-    source_address_prefix      = "10.0.2.0/23"
-    destination_address_prefix = "*"
-  }
-
-  security_rule {
-    name                       = "DenyAll"
-    priority                   = 1000
-    direction                  = "Inbound"
-    access                     = "Deny"
-    protocol                   = "*"
-    source_port_range          = "*"
-    destination_port_range     = "*"
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
@@ -125,31 +114,26 @@ resource "azurerm_subnet_network_security_group_association" "postgres" {
 }
 
 # ============================================================================
-# DATABASE — Azure PostgreSQL Flexible Server
+# DATABASE — Azure PostgreSQL Flexible Server (PUBLIC — PoC only)
 # ============================================================================
-
-# Private DNS Zone — PostgreSQL resolves only within the VNet
-resource "azurerm_private_dns_zone" "postgres" {
-  name                = "keycloak.private.postgres.database.azure.com"
-  resource_group_name = azurerm_resource_group.keycloak.name
-}
-
-resource "azurerm_private_dns_zone_virtual_network_link" "postgres" {
-  name                  = "keycloak-link"
-  resource_group_name   = azurerm_resource_group.keycloak.name
-  private_dns_zone_name = azurerm_private_dns_zone.postgres.name
-  virtual_network_id    = azurerm_virtual_network.keycloak.id
-}
+# NOTE: VNet integration (delegated_subnet_id + private_dns_zone_id) is
+# MUTUALLY EXCLUSIVE with public_network_access_enabled = true on Azure
+# PostgreSQL Flexible Server.  For this PoC we remove the VNet integration
+# entirely so that:
+#   1. The server gets a public FQDN accessible from pgAdmin / psql.
+#   2. Keycloak (running in ACA) connects via the same public endpoint (SSL).
+# The postgres-subnet and its NSG are kept in place so you can switch back
+# to private-only mode later by re-adding delegated_subnet_id and
+# private_dns_zone_id (and setting public_network_access_enabled = false).
 
 resource "azurerm_postgresql_flexible_server" "keycloak" {
   name                          = var.postgres_server_name
   location                      = azurerm_resource_group.keycloak.location
   resource_group_name           = azurerm_resource_group.keycloak.name
-  delegated_subnet_id           = azurerm_subnet.postgres.id
-  private_dns_zone_id           = azurerm_private_dns_zone.postgres.id
   administrator_login           = var.postgres_admin_user
   administrator_password        = var.postgres_admin_password
-  public_network_access_enabled = false
+  # PoC: expose publicly so pgAdmin / psql can connect from any machine
+  public_network_access_enabled = true
   backup_retention_days         = 7
   storage_mb                    = 32768
   storage_tier                  = "P4"
@@ -162,8 +146,14 @@ resource "azurerm_postgresql_flexible_server" "keycloak" {
       high_availability,
     ]
   }
+}
 
-  depends_on = [azurerm_private_dns_zone_virtual_network_link.postgres]
+# PoC: allow connections from any IP — restrict to your own IP in production
+resource "azurerm_postgresql_flexible_server_firewall_rule" "allow_all_poc" {
+  name             = "AllowAllIPs-PoC"
+  server_id        = azurerm_postgresql_flexible_server.keycloak.id
+  start_ip_address = "0.0.0.0"
+  end_ip_address   = "255.255.255.255"
 }
 
 resource "azurerm_postgresql_flexible_server_database" "keycloak" {

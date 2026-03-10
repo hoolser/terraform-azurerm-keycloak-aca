@@ -1,6 +1,18 @@
 output "postgres_server_fqdn" {
-  description = "PostgreSQL server FQDN (internal, within VNet)"
+  description = "PostgreSQL server FQDN (publicly reachable in PoC mode)"
   value       = azurerm_postgresql_flexible_server.keycloak.fqdn
+}
+
+output "postgres_pgadmin_connection" {
+  description = "pgAdmin / psql connection details (PoC — public access enabled)"
+  value = {
+    host     = azurerm_postgresql_flexible_server.keycloak.fqdn
+    port     = 5432
+    database = var.postgres_db_name
+    username = var.postgres_admin_user
+    sslmode  = "require"
+  }
+  sensitive = true
 }
 
 output "keycloak_fqdn" {
