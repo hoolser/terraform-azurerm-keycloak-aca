@@ -284,6 +284,8 @@ az containerapp update `
 
 Detailed testing for the High Availability of Keycloak while deployed on Azure Container Apps has been performed. Extensive tests validate clustering, replica failover, and session replication across all nodes. The complete step-by-step validation procedure — including pass/fail criteria for each test — is documented in the [**`testing-ha.md`**](../testing-ha.md) file.
 
+The actual observed results from running these tests against a live deployment — including JGROUPSPING table snapshots, Infinispan log excerpts, and scale up/down evidence — are recorded in [**`testing-ha-results.md`**](../testing-ha-results.md).
+
 ---
 
 ## Design Decisions & ACA Constraints
