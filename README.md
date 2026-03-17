@@ -139,7 +139,7 @@ Edit the file and set:
 
 Run the initial apply to create the networking, database, and container environment.
 
-*Tip: In `terraform.tfvars`, ensure `min_replicas = 1` and `max_replicas = 1` for this phase. This creates the resources without starting the application, preventing "zombie" discovery entries before the network is fully stabilized.*
+*Tip: In `terraform.tfvars`, set `min_replicas = 1` and `max_replicas = 1` for this phase.*
 
 
 ```powershell
