@@ -119,7 +119,8 @@ Azure Container Apps does **not** support UDP multicast, so JGroups' default `MP
 ### 1. Prerequisites
 
 ```powershell
-az login --use-device-code
+az login --use-device-code   
+(**OR az login --tenant {your-Directory-ID} --use-device-code)
 az account list --query "[].{Name:name, ID:id}" -o table
 ```
 Copy your Subscription ID.
