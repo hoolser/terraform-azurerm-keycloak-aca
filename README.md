@@ -123,6 +123,16 @@ az login --use-device-code
 (**OR az login --tenant {your-Directory-ID} --use-device-code)
 az account list --query "[].{Name:name, ID:id}" -o table
 ```
+
+### OPTIONAL: Register required providers (NOTE that this step required only once per subscription)
+```powershell
+az provider register --namespace Microsoft.Network
+az provider register --namespace Microsoft.App
+az provider register --namespace Microsoft.DBforPostgreSQL
+
+# Verify registration (may take a few minutes to show 'Registered')
+az provider list --query "[?registrationState=='Registered'].namespace" --output table
+```
 Copy your Subscription ID.
 
 ### 2. Configure `terraform/terraform.tfvars`
