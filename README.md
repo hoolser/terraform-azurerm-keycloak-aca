@@ -197,6 +197,12 @@ Default credentials:
 
 Check that both replicas are running:
 
+
+```powershell
+##!Optional step that may needed: **To set the subscription context at your terminal.**:
+ az account set --subscription "your-subscription-id-here"
+```
+
 ```powershell
 az containerapp replica list `
   --name keycloak `
