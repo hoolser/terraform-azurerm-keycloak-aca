@@ -129,6 +129,15 @@ az account list --query "[].{Name:name, ID:id}" -o table
 az provider register --namespace Microsoft.Network
 az provider register --namespace Microsoft.App
 az provider register --namespace Microsoft.DBforPostgreSQL
+az provider register --namespace Microsoft.KeyVault ##TODO check if this is really required!!
+az provider register --namespace Microsoft.ManagedIdentity ##TODO check if this is really required!!
+
+#optional if you see errors like "Service returned an error. Status=403 Code="Forbidden" Message="Caller is not authorized to perform action on resource." while the Vaunt get created.
+az role assignment create `
+  --assignee "correct.email@yourtenant.onmicrosoft.com" `
+  --role "Key Vault Administrator" `
+  --scope "/subscriptions/{your-subscription-id-here}"
+
 
 # Verify registration (may take a few minutes to show 'Registered')
 az provider list --query "[?registrationState=='Registered'].namespace" --output table
@@ -150,7 +159,7 @@ Edit the file and set:
 
 Run the initial apply to create the networking, database, and container environment.
 
-*Tip: In `terraform.tfvars`, set `min_replicas = 1` and `max_replicas = 1` for this phase.*
+*Tip: In `terraform.tfvars` (or in `dev.tfvars`, `prod.tfvars`, etc. accordingly), set `min_replicas = 1` and `max_replicas = 1` for this phase.*
 
 
 ```powershell
@@ -160,6 +169,19 @@ terraform plan
 terraform apply                   
 ( or terraform apply -auto-approve )
 ```
+
+* Alternative equivalent commands for specifying the env-related vars (e.g. for *dev* env)
+
+```powershell 
+##e.g. for dev env:
+cd terraform
+terraform init
+terraform plan -var-file="dev.tfvars"
+terraform apply -var-file="dev.tfvars"
+( or terraform apply -auto-approve -var-file="dev.tfvars")
+```
+
+
 Deployment takes approximately **15–20 minutes** (most time is PostgreSQL provisioning).
 
 ### 4. Get the Keycloak FQDN
@@ -172,13 +194,21 @@ Copy the FQDN (e.g. `keycloak.redpebble-abc123.northeurope.azurecontainerapps.io
 
 ### 5. Phase 2 — Fix the Hostname
 
-Open `terraform.tfvars` and set `keycloak_hostname` to the FQDN from above, then re-apply:
+Open `terraform.tfvars` (or in `dev.tfvars`, `prod.tfvars`, etc. accordingly) and set `keycloak_hostname` to the FQDN from above, then re-apply:
 
 Enable HA: Set `min_replicas` = `2` and `max_replicas` = `5`.
 Then apply the changes:
 ```powershell
 terraform apply
 ( or terraform apply -auto-approve )
+```
+
+* Alternative equivalent commands for specifying the env-related vars (e.g. for *dev* env)
+
+```powershell 
+##e.g. for dev env:
+terraform apply -var-file="dev.tfvars"
+( or terraform apply -var-file="dev.tfvars" -auto-approve )
 ```
 
 This enables `KC_HOSTNAME_STRICT=true` so Keycloak enforces the correct issuer URL in tokens.
@@ -237,6 +267,15 @@ terraform destroy
 ( or terraform destroy -auto-approve )
 ```
 
+* Alternative equivalent command for specifying the env-related vars
+
+```powershell
+##e.g. for dev env:
+terraform destroy -var-file="dev.tfvars"
+( or terraform destroy -auto-approve -var-file="dev.tfvars")
+```
+
+
 ---
 
 ## Operational Notes
@@ -287,6 +326,41 @@ az containerapp update `
 
 ---
 
+For TODO-1 the following resources are supported:
+
+###  Azure Key Vault Integration
+
+```
+┌──────────────────┐
+│   terraform.tf   │  ← Only stores Key Vault reference names
+│   + keyvault.tf  │
+└────────┬─────────┘
+         │ Creates
+         ▼
+┌──────────────────────┐
+│  Azure Key Vault     │
+│  ├─ postgres-admin-user
+│  ├─ postgres-admin-password
+│  ├─ keycloak-admin-user
+│  └─ keycloak-admin-password
+└────────┬─────────────┘
+         │ RBAC + MSI
+         ▼
+┌──────────────────────┐
+│ Managed Identity     │
+└────────┬─────────────┘
+         │
+         ▼
+┌──────────────────────┐
+│ Keycloak Container   │
+│ App (ACA)            │
+│ Reads secrets at     │
+│ startup (no env vars)│
+└──────────────────────┘
+```
+---
+
+---
 ## Useful References
 
 - [Keycloak 26.x — Configuring distributed caches](https://www.keycloak.org/server/caching)

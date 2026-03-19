@@ -57,3 +57,36 @@ output "database_credentials" {
   }
   sensitive = true
 }
+
+# ============================================================================
+# Key Vault Outputs (when enabled)
+# ============================================================================
+
+output "key_vault" {
+  description = "Key Vault details (only when use_key_vault = true)"
+  value = var.use_key_vault ? {
+    name      = data.azurerm_key_vault.keycloak[0].name
+    id        = data.azurerm_key_vault.keycloak[0].id
+    vault_uri = data.azurerm_key_vault.keycloak[0].vault_uri
+  } : null
+}
+
+output "managed_identity" {
+  description = "User-Assigned Managed Identity for Container App"
+  value = var.use_key_vault ? {
+    name         = azurerm_user_assigned_identity.keycloak_app[0].name
+    principal_id = azurerm_user_assigned_identity.keycloak_app[0].principal_id
+    client_id    = azurerm_user_assigned_identity.keycloak_app[0].client_id
+  } : null
+}
+
+output "key_vault_secret_references" {
+  description = "Key Vault secret names used by Container App (for reference)"
+  value = var.use_key_vault ? {
+    postgres_admin_user     = "postgres-admin-user"
+    postgres_admin_password = "postgres-admin-password"
+    keycloak_admin_user     = "keycloak-admin-user"
+    keycloak_admin_password = "keycloak-admin-password"
+  } : null
+}
+

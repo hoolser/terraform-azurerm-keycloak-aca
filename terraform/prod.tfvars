@@ -1,13 +1,13 @@
 #subscription_id = "your-subscription-id-here"   # TODO: replace with your real subscription ID
 
 # Resource Group and Environment
-resource_group_name            = "keycloak-poc-rg"
+resource_group_name            = "keycloak-poc-rg-prod"
 location                       = "northeurope"
 container_app_environment_name = "keycloak-env"
 
 # PostgreSQL Configuration
 # postgres_server_name must be globally unique across Azure
-postgres_server_name    = "keycloak-pg-srv-tasos228922"   # TODO: Change to something globally unique!
+postgres_server_name    = "keycloak-pg-srv-tasosprod244922"   # TODO: Change to something globally unique!
 postgres_sku            = "B_Standard_B2s"
 postgres_version        = "16"
 postgres_db_name        = "keycloak"
@@ -25,7 +25,7 @@ keycloak_admin_password = "KeycloakAdminP@ss123!"     # TODO: Change to a secure
 # Set use_key_vault = true to use Azure Key Vault
 
 use_key_vault   = true  # Set to true for production with Key Vault
-key_vault_name  = "tasos-vault"     # e.g. "keycloak-secrets-abc123" (only needed if use_key_vault=true)
+key_vault_name  = "tasos-vault-prod-20260319"  # (only needed if use_key_vault=true)
 
 # When use_key_vault=true, the passwords below are still used for INITIAL creation
 # of secrets in Key Vault. After that, they can be removed. When use_key_vault=false,

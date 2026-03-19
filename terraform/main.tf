@@ -216,6 +216,43 @@ resource "azurerm_container_app" "keycloak" {
   resource_group_name          = azurerm_resource_group.keycloak.name
   revision_mode                = "Single"
 
+  # User-Assigned Managed Identity for Key Vault access (only when use_key_vault = true)
+  dynamic "identity" {
+    for_each = var.use_key_vault ? [1] : []
+    content {
+      type         = "UserAssigned"
+      identity_ids = [azurerm_user_assigned_identity.keycloak_app[0].id]
+    }
+  }
+
+  secret {
+    name                = "postgres-admin-user"
+    key_vault_secret_id = var.use_key_vault ? "${data.azurerm_key_vault.keycloak[0].vault_uri}secrets/postgres-admin-user" : null
+    identity            = var.use_key_vault ? azurerm_user_assigned_identity.keycloak_app[0].id : null
+    value               = !var.use_key_vault ? var.postgres_admin_user : null
+  }
+
+  secret {
+    name                = "postgres-admin-password"
+    key_vault_secret_id = var.use_key_vault ? "${data.azurerm_key_vault.keycloak[0].vault_uri}secrets/postgres-admin-password" : null
+    identity            = var.use_key_vault ? azurerm_user_assigned_identity.keycloak_app[0].id : null
+    value               = !var.use_key_vault ? var.postgres_admin_password : null
+  }
+
+  secret {
+    name                = "keycloak-admin-user"
+    key_vault_secret_id = var.use_key_vault ? "${data.azurerm_key_vault.keycloak[0].vault_uri}secrets/keycloak-admin-user" : null
+    identity            = var.use_key_vault ? azurerm_user_assigned_identity.keycloak_app[0].id : null
+    value               = !var.use_key_vault ? var.keycloak_admin_user : null
+  }
+
+  secret {
+    name                = "keycloak-admin-password"
+    key_vault_secret_id = var.use_key_vault ? "${data.azurerm_key_vault.keycloak[0].vault_uri}secrets/keycloak-admin-password" : null
+    identity            = var.use_key_vault ? azurerm_user_assigned_identity.keycloak_app[0].id : null
+    value               = !var.use_key_vault ? var.keycloak_admin_password : null
+  }
+
   lifecycle {
     ignore_changes = [
       tags,
@@ -245,13 +282,34 @@ resource "azurerm_container_app" "keycloak" {
         name  = "KC_DB_URL"
         value = local.jdbc_url
       }
-      env {
-        name  = "KC_DB_USERNAME"
-        value = var.postgres_admin_user
+      # Conditionally use Key Vault secrets or plaintext values
+      dynamic "env" {
+        for_each = var.use_key_vault ? [] : [1]
+        content {
+          name  = "KC_DB_USERNAME"
+          value = var.postgres_admin_user
+        }
       }
-      env {
-        name  = "KC_DB_PASSWORD"
-        value = var.postgres_admin_password
+      dynamic "env" {
+        for_each = var.use_key_vault ? [1] : []
+        content {
+          name       = "KC_DB_USERNAME"
+          secret_name = "postgres-admin-user"
+        }
+      }
+      dynamic "env" {
+        for_each = var.use_key_vault ? [] : [1]
+        content {
+          name  = "KC_DB_PASSWORD"
+          value = var.postgres_admin_password
+        }
+      }
+      dynamic "env" {
+        for_each = var.use_key_vault ? [1] : []
+        content {
+          name       = "KC_DB_PASSWORD"
+          secret_name = "postgres-admin-password"
+        }
       }
       env {
         name  = "KC_DB_SCHEMA"
@@ -312,22 +370,62 @@ resource "azurerm_container_app" "keycloak" {
       # ── Bootstrap admin (only used when no admin exists in DB) ────────────
       # Keycloak 26.x uses KC_BOOTSTRAP_ADMIN_* (the old KEYCLOAK_ADMIN_*
       # env vars still work as aliases but the new names are canonical).
-      env {
-        name  = "KC_BOOTSTRAP_ADMIN_USERNAME"
-        value = var.keycloak_admin_user
+      dynamic "env" {
+        for_each = var.use_key_vault ? [] : [1]
+        content {
+          name  = "KC_BOOTSTRAP_ADMIN_USERNAME"
+          value = var.keycloak_admin_user
+        }
       }
-      env {
-        name  = "KC_BOOTSTRAP_ADMIN_PASSWORD"
-        value = var.keycloak_admin_password
+      dynamic "env" {
+        for_each = var.use_key_vault ? [1] : []
+        content {
+          name       = "KC_BOOTSTRAP_ADMIN_USERNAME"
+          secret_name = "keycloak-admin-user"
+        }
+      }
+      dynamic "env" {
+        for_each = var.use_key_vault ? [] : [1]
+        content {
+          name  = "KC_BOOTSTRAP_ADMIN_PASSWORD"
+          value = var.keycloak_admin_password
+        }
+      }
+      dynamic "env" {
+        for_each = var.use_key_vault ? [1] : []
+        content {
+          name       = "KC_BOOTSTRAP_ADMIN_PASSWORD"
+          secret_name = "keycloak-admin-password"
+        }
       }
       # Keep legacy names as fallback for compatibility
-      env {
-        name  = "KEYCLOAK_ADMIN"
-        value = var.keycloak_admin_user
+      dynamic "env" {
+        for_each = var.use_key_vault ? [] : [1]
+        content {
+          name  = "KEYCLOAK_ADMIN"
+          value = var.keycloak_admin_user
+        }
       }
-      env {
-        name  = "KEYCLOAK_ADMIN_PASSWORD"
-        value = var.keycloak_admin_password
+      dynamic "env" {
+        for_each = var.use_key_vault ? [1] : []
+        content {
+          name       = "KEYCLOAK_ADMIN"
+          secret_name = "keycloak-admin-user"
+        }
+      }
+      dynamic "env" {
+        for_each = var.use_key_vault ? [] : [1]
+        content {
+          name  = "KEYCLOAK_ADMIN_PASSWORD"
+          value = var.keycloak_admin_password
+        }
+      }
+      dynamic "env" {
+        for_each = var.use_key_vault ? [1] : []
+        content {
+          name       = "KEYCLOAK_ADMIN_PASSWORD"
+          secret_name = "keycloak-admin-password"
+        }
       }
 
       # ── Observability ─────────────────────────────────────────────────────
@@ -399,8 +497,12 @@ resource "azurerm_container_app" "keycloak" {
 
   }
 
+  # depends_on is implicit via references to Key Vault resources
+  # (they are only accessed when var.use_key_vault = true, so this is safe)
   depends_on = [
     azurerm_postgresql_flexible_server.keycloak,
     azurerm_postgresql_flexible_server_database.keycloak,
+    azurerm_user_assigned_identity.keycloak_app,
+    azurerm_role_assignment.keycloak_app_secrets_user,
   ]
 }
