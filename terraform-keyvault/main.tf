@@ -7,7 +7,7 @@
 # Deploy first:
 #   cd terraform-keyvault
 #   terraform init
-#   terraform apply -var-file="dev.tfvars"
+#   terraform apply -var-file="tfvars-environments/dev.tfvars"
 #
 # Output: Key Vault URI and secret names for use by Keycloak configuration
 # ============================================================================
@@ -85,6 +85,10 @@ resource "azurerm_key_vault_secret" "postgres_admin_user" {
   value        = var.postgres_admin_user
   key_vault_id = azurerm_key_vault.keycloak.id
 
+  lifecycle {
+    ignore_changes = [value]  # Prevent redeployment when manually rotated via CLI
+  }
+
   tags = {
     purpose = "database-authentication"
   }
@@ -111,6 +115,10 @@ resource "azurerm_key_vault_secret" "keycloak_admin_user" {
   name         = "keycloak-admin-user"
   value        = var.keycloak_admin_user
   key_vault_id = azurerm_key_vault.keycloak.id
+
+  lifecycle {
+    ignore_changes = [value]  # Prevent redeployment when manually rotated via CLI
+  }
 
   tags = {
     purpose = "keycloak-authentication"

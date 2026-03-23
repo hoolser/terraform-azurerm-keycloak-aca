@@ -7,14 +7,19 @@
 # The Key Vault is NOT created or destroyed by this configuration.
 # It only reads existing secrets and grants Container App access to them.
 #
+# When use_key_vault = true:
+#   1. Terraform stores REFERENCES to Key Vault secrets, not the actual values
+#   2. Container App retrieves secret VALUES at runtime using Managed Identity
+#   3. Actual credentials are NEVER stored in Terraform state
+#   4. Only Key Vault URI and secret names appear in state (safe to share)
 # Prerequisites:
 #   1. Deploy Key Vault first:
 #      cd ../terraform-keyvault
-#      terraform apply -var-file="dev.tfvars"
+#      terraform apply -var-file="tfvars-environments/dev.tfvars"
 #
 #   2. Then deploy Keycloak (this configuration):
 #      cd ../terraform
-#      terraform apply -var-file="dev.tfvars"
+#      terraform apply -var-file="tfvars-environments/dev.tfvars"
 #
 # Key Vault lifecycle:
 #   - Create: ../terraform-keyvault/terraform apply
@@ -43,18 +48,6 @@ data "azurerm_key_vault_secret" "postgres_admin_user" {
 data "azurerm_key_vault_secret" "postgres_admin_password" {
   count           = var.use_key_vault ? 1 : 0
   name            = "postgres-admin-password"
-  key_vault_id    = data.azurerm_key_vault.keycloak[0].id
-}
-
-data "azurerm_key_vault_secret" "keycloak_admin_user" {
-  count           = var.use_key_vault ? 1 : 0
-  name            = "keycloak-admin-user"
-  key_vault_id    = data.azurerm_key_vault.keycloak[0].id
-}
-
-data "azurerm_key_vault_secret" "keycloak_admin_password" {
-  count           = var.use_key_vault ? 1 : 0
-  name            = "keycloak-admin-password"
   key_vault_id    = data.azurerm_key_vault.keycloak[0].id
 }
 

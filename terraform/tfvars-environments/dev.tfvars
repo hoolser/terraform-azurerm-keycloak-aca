@@ -7,7 +7,7 @@ container_app_environment_name = "keycloak-env"
 
 # PostgreSQL Configuration
 # postgres_server_name must be globally unique across Azure
-postgres_server_name    = "keycloak-pg-srv-5dev77772"   # TODO: Change to something globally unique!
+postgres_server_name    = "keycloak-pg-srv-5dev77412"   # TODO: Change to something globally unique!
 postgres_sku            = "B_Standard_B2s"
 postgres_version        = "16"
 postgres_db_name        = "keycloak"
@@ -27,15 +27,15 @@ keycloak_admin_password = "KeycloakAdminP@ss123!"     # TODO: Change to a secure
 # To deploy:
 #   1. First deploy Key Vault:
 #      cd ../terraform-keyvault
-#      terraform apply -var-file="dev.tfvars"
+#      terraform apply -var-file="tfvars-environments/dev.tfvars"
 #
 #   2. Then deploy Keycloak:
 #      cd ../terraform
-#      terraform apply -var-file="dev.tfvars"
+#      terraform apply -var-file="tfvars-environments/dev.tfvars"
 # ============================================================================
 
 use_key_vault               = false  # Set to true if you want to use Key Vault for secrets management
-key_vault_name              = "tasos-vault-dev-20260319"
+key_vault_name              = "tasos-vault-dev-14"
 key_vault_resource_group    = "keycloak-keyvault-rg-dev"
 
 # Two-phase hostname setup:

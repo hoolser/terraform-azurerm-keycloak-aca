@@ -16,12 +16,15 @@ locals {
   hostname_strict = var.keycloak_hostname != "" ? "true" : "false"
   hostname_value  = var.keycloak_hostname  # empty string → env var omitted (see container block)
 
+
+  # ─────────────────────────────────────────────────────────────────────────
   # JGroups JDBC_PING JAVA_OPTS - enables TCP cluster discovery via shared DB table
   # Keycloak 26.x ships cache-ispn-jdbc-ping.xml; activated via KC_CACHE_STACK=jdbc-ping
-  jgroups_java_opts = join(" ", [
+  # ─────────────────────────────────────────────────────────────────────────
+  jgroups_java_opts_base = join(" ", [
     "-Djgroups.jdbc.connection_url=${local.jdbc_url}",
-    "-Djgroups.jdbc.connection_username=${var.postgres_admin_user}",
-    "-Djgroups.jdbc.connection_password=${var.postgres_admin_password}",
+    "-Djgroups.jdbc.connection_username=$${KC_DB_USERNAME}",
+    "-Djgroups.jdbc.connection_password=$${KC_DB_PASSWORD}",
     "-Djgroups.jdbc.driver_name=postgresql",
 
     # Networking fixes
@@ -30,6 +33,8 @@ locals {
     "-Djava.net.preferIPv4Stack=true",   # Prevent issues with Azure IPv6
     "-Djgroups.use.mcast_addr=false"     # Disable multicast
   ])
+
+  jgroups_java_opts = sensitive(local.jgroups_java_opts_base)
 }
 
 # ============================================================================
@@ -147,8 +152,8 @@ resource "azurerm_postgresql_flexible_server" "keycloak" {
   resource_group_name           = azurerm_resource_group.keycloak.name
   delegated_subnet_id           = azurerm_subnet.postgres.id
   private_dns_zone_id           = azurerm_private_dns_zone.postgres.id
-  administrator_login           = var.postgres_admin_user
-  administrator_password        = var.postgres_admin_password
+  administrator_login    = var.use_key_vault ? data.azurerm_key_vault_secret.postgres_admin_user[0].value : var.postgres_admin_user
+  administrator_password = var.use_key_vault ? data.azurerm_key_vault_secret.postgres_admin_password[0].value : var.postgres_admin_password
   public_network_access_enabled = false
   backup_retention_days         = 7
   storage_mb                    = 32768

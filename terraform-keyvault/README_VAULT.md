@@ -56,8 +56,8 @@ recover_kv_on_apply  = true   # Recover if accidentally deleted
 ```powershell
 cd terraform-keyvault
 terraform init
-terraform plan -var-file="dev.tfvars"
-terraform apply -var-file="dev.tfvars"
+terraform plan -var-file="tfvars-environments/dev.tfvars"
+terraform apply -var-file="tfvars-environments/dev.tfvars"
 ```
 
 **IMPORTANT: Key Vault names are GLOBALLY UNIQUE**
@@ -98,7 +98,7 @@ Or manually purge the soft-deleted vault if you own it.
 
 ```powershell
 cd ../terraform-keyvault
-terraform destroy -var-file="dev.tfvars"
+terraform destroy -var-file="tfvars-environments/dev.tfvars"
 ```
 
 **Behavior depends on `purge_kv_on_destroy` setting:**
@@ -195,13 +195,13 @@ terraform output
 ### Plan Changes
 
 ```powershell
-terraform plan -var-file="dev.tfvars"
+terraform plan -var-file="tfvars-environments/dev.tfvars"
 ```
 
 ### Apply Updates
 
 ```powershell
-terraform apply -var-file="dev.tfvars"
+terraform apply -var-file="tfvars-environments/dev.tfvars"
 ```
 
 ### Switch Environment
@@ -214,7 +214,7 @@ terraform state list
 terraform apply -var-file="prod.tfvars"
 
 # Destroy dev
-terraform destroy -var-file="dev.tfvars"
+terraform destroy -var-file="tfvars-environments/dev.tfvars"
 ```
 
 ### Check Terraform State

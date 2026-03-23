@@ -69,6 +69,7 @@ output "key_vault" {
     id        = data.azurerm_key_vault.keycloak[0].id
     vault_uri = data.azurerm_key_vault.keycloak[0].vault_uri
   } : null
+  sensitive = true
 }
 
 output "managed_identity" {
@@ -88,5 +89,6 @@ output "key_vault_secret_references" {
     keycloak_admin_user     = "keycloak-admin-user"
     keycloak_admin_password = "keycloak-admin-password"
   } : null
+  sensitive = true
 }
 

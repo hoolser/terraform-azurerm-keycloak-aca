@@ -6,6 +6,7 @@ output "key_vault_id" {
 output "key_vault_uri" {
   value       = azurerm_key_vault.keycloak.vault_uri
   description = "Key Vault URI for secret access"
+  sensitive = true
 }
 
 output "key_vault_name" {

@@ -176,9 +176,9 @@ terraform apply
 ##e.g. for dev env:
 cd terraform
 terraform init
-terraform plan -var-file="dev.tfvars"
-terraform apply -var-file="dev.tfvars"
-( or terraform apply -auto-approve -var-file="dev.tfvars")
+terraform plan -var-file="tfvars-environments/dev.tfvars"
+terraform apply -var-file="tfvars-environments/dev.tfvars"
+( or terraform apply -auto-approve -var-file="tfvars-environments/dev.tfvars")
 ```
 
 
@@ -207,8 +207,8 @@ terraform apply
 
 ```powershell 
 ##e.g. for dev env:
-terraform apply -var-file="dev.tfvars"
-( or terraform apply -var-file="dev.tfvars" -auto-approve )
+terraform apply -var-file="tfvars-environments/dev.tfvars"
+( or terraform apply -var-file="tfvars-environments/dev.tfvars" -auto-approve )
 ```
 
 This enables `KC_HOSTNAME_STRICT=true` so Keycloak enforces the correct issuer URL in tokens.
@@ -271,8 +271,8 @@ terraform destroy
 
 ```powershell
 ##e.g. for dev env:
-terraform destroy -var-file="dev.tfvars"
-( or terraform destroy -auto-approve -var-file="dev.tfvars")
+terraform destroy -var-file="tfvars-environments/dev.tfvars"
+( or terraform destroy -auto-approve -var-file="tfvars-environments/dev.tfvars")
 ```
 
 
